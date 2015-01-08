@@ -64,8 +64,11 @@ Linux)
         	parted -l | grep "Disk /dev" | grep -v "mapper" | \
                 while read i; do   echo -e "DISK: $i" ; done \
                 	        >> $MACHINE_OSINFO_DIR/osinfo.log
-        	echo "NET: `lspci | grep -i 'Ethernet controller' | wc -l`" \
-                        	>> $MACHINE_OSINFO_DIR/osinfo.log
+		lspci | grep -i 'Ethernet controller' | \
+		while read i; do
+        		echo "NET: $i" ;
+		done \
+                       	>> $MACHINE_OSINFO_DIR/osinfo.log
         	cat $MACHINE_OSINFO_DIR/osinfo.log
 	else
 		echo "We do not support OSINFO for $LINUX_VENDOR yet.."
@@ -170,7 +173,14 @@ HP-UX)
 		fi
 	done \
                	>> $MACHINE_OSINFO_DIR/osinfo.log
-        echo "NET: `lanscan -i | wc -l`" >> $MACHINE_OSINFO_DIR/osinfo.log
+        lanscan | grep "lan" | grep -v "DOWN" | \
+        while read i; do
+              echo "NET: $i" ;
+        done \
+              >> $MACHINE_OSINFO_DIR/osinfo.log
+
+		>> $MACHINE_OSINFO_DIR/osinfo.log
+
         cat $MACHINE_OSINFO_DIR/osinfo.log
 ;;
 
