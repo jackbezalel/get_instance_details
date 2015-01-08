@@ -120,22 +120,22 @@ SunOS)
               >> $MACHINE_OSINFO_DIR/osinfo.log
         echo "MEM: `prtconf | grep -i 'Memory size'`" \
               >> $MACHINE_OSINFO_DIR/osinfo.log
-        echo "0 q" | format | \
-		i=" "
-		echo "0 q" | format 2>/dev/null | \
-		until [ "`(echo $i | cut -c0-12)`" = "Specify disk" ]
-		do
-        		read i
-        		DISK_LINE=" `echo $i | grep '^[0-9].'`"
-			if 	[ "$DISK_LINE" != " " ];
-			then	
-				echo "DISK:" $DISK_LINE
-			fi
-		done \
-                	>> $MACHINE_OSINFO_DIR/osinfo.log
-		echo "NET: `prtconf|grep -i 'network, instance' | wc -l`" \
-                                >> $MACHINE_OSINFO_DIR/osinfo.log
-                cat $MACHINE_OSINFO_DIR/osinfo.log
+
+	i=" "
+	echo "0 q" | format 2>/dev/null | \
+	until [ "`(echo $i | cut -c0-12)`" = "Specify disk" ]
+	do
+       		read i
+       		DISK_LINE=" `echo $i | grep '^[0-9].'`"
+		if 	[ "$DISK_LINE" != " " ];
+		then	
+			echo "DISK:" $DISK_LINE
+		fi
+	done \
+               	>> $MACHINE_OSINFO_DIR/osinfo.log
+	echo "NET: `prtconf|grep -i 'network, instance' | wc -l`" \
+                >> $MACHINE_OSINFO_DIR/osinfo.log
+        cat $MACHINE_OSINFO_DIR/osinfo.log
 ;;
 
 HP-UX)
@@ -150,51 +150,28 @@ HP-UX)
 	echo "Vendor=$OSNAME"	
 	echo "Major Version=$OS_MAJOR_VERS"
 	
-	# Check if this machine has zones software installed
-	# Then if that's a sparse zone it should be handled by
-	# updating the global zone rather than directly
-
-	if	[ -f /opt/hpvm/bin/hpvminfo ];
-	then
-		ZONE_NAME="`zonename`"
-		echo "ZONE $ZONE_NAME"
-		ZONE_TYPE="`pkgcond -n is_what | grep 'is_global_zone=0'`"
-		if	[ " $ZONE_TYPE" != " " ];
-		then	
-			echo "Execution aborted since this NOT a global zone."
-			echo "Please re-run on the global zone."
-			exit $TRUE
-		fi
-	fi
-
 	OSARCH="`uname -m`"
 
         MACHINE_OSINFO_DIR="$OSINFO_ROOT/$HOSTNAME/$OSINFO_DATE"
         echo "Machine $HOSTNAME OSINFO will be reported at $MACHINE_OSINFO_DIR"
 
         mkdir -p $MACHINE_OSINFO_DIR
+	HARDWARE_TYPE="`model`" 
 	echo "OSINFO dump `date`" > $MACHINE_OSINFO_DIR/osinfo.log
-	echo "CPU: `psrinfo | wc -l`" \
+	echo "HARDWARE: $HARDWARE_TYPE" >> $MACHINE_OSINFO_DIR/osinfo.log
+	echo "CPU: `ioscan -C processor -l -F | wc -l`" \
               >> $MACHINE_OSINFO_DIR/osinfo.log
-        echo "MEM: `prtconf | grep -i 'Memory size'`" \
+        echo "MEM: `print_manifest |grep -i memory`" \
               >> $MACHINE_OSINFO_DIR/osinfo.log
-        echo "0 q" | format | \
-		i=" "
-		echo "0 q" | format 2>/dev/null | \
-		until [ "`(echo $i | cut -c0-12)`" = "Specify disk" ]
-		do
-        		read i
-        		DISK_LINE=" `echo $i | grep '^[0-9].'`"
-			if 	[ "$DISK_LINE" != " " ];
-			then	
-				echo "DISK:" $DISK_LINE
-			fi
-		done \
-                	>> $MACHINE_OSINFO_DIR/osinfo.log
-                dladm show-link | egrep -vi "vnic|vnet" | \
-                        while read i; do   echo "LAN: $i" ; done \
-                                >> $MACHINE_OSINFO_DIR/osinfo.log
-                cat $MACHINE_OSINFO_DIR/osinfo.log
+        echo "`ioscan -fC disk`" | while read i; do   
+		if 	[ "`echo $i | cut -c0-4`" = "disk" ];
+		then
+			echo "DISK: $i"
+		fi
+	done \
+               	>> $MACHINE_OSINFO_DIR/osinfo.log
+        echo "NET: `lanscan -i | wc -l`" >> $MACHINE_OSINFO_DIR/osinfo.log
+        cat $MACHINE_OSINFO_DIR/osinfo.log
 ;;
 
 *)
