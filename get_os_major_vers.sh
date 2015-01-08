@@ -19,6 +19,11 @@ SunOS)
         return $TRUE
 ;;
 
+HP-UX)
+	OS_MAJOR_VERS="`uname -r`"
+        echo $OS_MAJOR_VERS
+        return $TRUE
+
 *)
 	echo "error"
         exit $TRUE
