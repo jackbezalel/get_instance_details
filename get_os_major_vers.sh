@@ -12,23 +12,20 @@ redhat)
         echo $OS_MAJOR_VERS
         return $TRUE
 ;;
-
 SunOS)
         OS_MAJOR_VERS="`uname -r`"
         echo $OS_MAJOR_VERS
         return $TRUE
 ;;
-
 HP-UX)
 	OS_MAJOR_VERS="`uname -r`"
         echo $OS_MAJOR_VERS
         return $TRUE
-
+;;
 *)
 	echo "error"
         exit $TRUE
 ;;
-
 esac
 
 

@@ -54,6 +54,9 @@ Linux)
 	if [ $LINUX_VENDOR = "redhat" ];
 	then
 		mkdir -p $MACHINE_OSINFO_DIR
+		echo "OSINFO dump `date`" > $MACHINE_OSINFO_DIR/osinfo.log
+		echo "HARDWARE: `dmidecode -s system-manufacturer`" \
+			>> $MACHINE_OSINFO_DIR/osinfo.log
 		echo "CPU: `cat /proc/cpuinfo | grep processor | wc -l`" \
                		>> $MACHINE_OSINFO_DIR/osinfo.log
         	echo "MEM: `cat /proc/meminfo | grep -i memtotal`" \
@@ -61,8 +64,7 @@ Linux)
         	parted -l | grep "Disk /dev" | grep -v "mapper" | \
                 while read i; do   echo -e "DISK: $i" ; done \
                 	        >> $MACHINE_OSINFO_DIR/osinfo.log
-        	lspci | grep -i 'Ethernet controller' | grep -vi vmware | \
-                	while read i; do   echo -e "LAN: $i" ; done \
+        	echo "NET: `lspci | grep -i 'Ethernet controller' | wc -l`" \
                         	>> $MACHINE_OSINFO_DIR/osinfo.log
         	cat $MACHINE_OSINFO_DIR/osinfo.log
 	else
@@ -70,6 +72,7 @@ Linux)
 		exit $TRUE
 	fi
 ;;
+
 SunOS)
 	OS_MAJOR_VERS="`GET_OS_MAJOR_VERS $OSNAME`"
 
@@ -99,12 +102,78 @@ SunOS)
 		fi
 	fi
 
+
 	OSARCH="`uname -m`"
 
         MACHINE_OSINFO_DIR="$OSINFO_ROOT/$HOSTNAME/$OSINFO_DATE"
         echo "Machine $HOSTNAME OSINFO will be reported at $MACHINE_OSINFO_DIR"
 
         mkdir -p $MACHINE_OSINFO_DIR
+	HARDWARE_TYPE="`uname -i`" 
+	if	[ " `prtconf | grep -i 'virtual-devices'`" != " " ];
+	then
+		HARDWARE_TYPE="VIRTUAL $HARDWARE_TYPE"
+	fi
+	echo "OSINFO dump `date`" > $MACHINE_OSINFO_DIR/osinfo.log
+	echo "HARDWARE: $HARDWARE_TYPE" >> $MACHINE_OSINFO_DIR/osinfo.log
+	echo "CPU: `psrinfo | wc -l`" \
+              >> $MACHINE_OSINFO_DIR/osinfo.log
+        echo "MEM: `prtconf | grep -i 'Memory size'`" \
+              >> $MACHINE_OSINFO_DIR/osinfo.log
+        echo "0 q" | format | \
+		i=" "
+		echo "0 q" | format 2>/dev/null | \
+		until [ "`(echo $i | cut -c0-12)`" = "Specify disk" ]
+		do
+        		read i
+        		DISK_LINE=" `echo $i | grep '^[0-9].'`"
+			if 	[ "$DISK_LINE" != " " ];
+			then	
+				echo "DISK:" $DISK_LINE
+			fi
+		done \
+                	>> $MACHINE_OSINFO_DIR/osinfo.log
+		echo "NET: `prtconf|grep -i 'network, instance' | wc -l`" \
+                                >> $MACHINE_OSINFO_DIR/osinfo.log
+                cat $MACHINE_OSINFO_DIR/osinfo.log
+;;
+
+HP-UX)
+	OS_MAJOR_VERS="`GET_OS_MAJOR_VERS $OSNAME`"
+
+	if 	[ $OS_MAJOR_VERS = "error" ];
+	then
+        	echo "We do not support OSINFO for $OSNAME yet.."
+        	exit $TRUE
+	fi
+
+	echo "Vendor=$OSNAME"	
+	echo "Major Version=$OS_MAJOR_VERS"
+	
+	# Check if this machine has zones software installed
+	# Then if that's a sparse zone it should be handled by
+	# updating the global zone rather than directly
+
+	if	[ -f /opt/hpvm/bin/hpvminfo ];
+	then
+		ZONE_NAME="`zonename`"
+		echo "ZONE $ZONE_NAME"
+		ZONE_TYPE="`pkgcond -n is_what | grep 'is_global_zone=0'`"
+		if	[ " $ZONE_TYPE" != " " ];
+		then	
+			echo "Execution aborted since this NOT a global zone."
+			echo "Please re-run on the global zone."
+			exit $TRUE
+		fi
+	fi
+
+	OSARCH="`uname -m`"
+
+        MACHINE_OSINFO_DIR="$OSINFO_ROOT/$HOSTNAME/$OSINFO_DATE"
+        echo "Machine $HOSTNAME OSINFO will be reported at $MACHINE_OSINFO_DIR"
+
+        mkdir -p $MACHINE_OSINFO_DIR
+	echo "OSINFO dump `date`" > $MACHINE_OSINFO_DIR/osinfo.log
 	echo "CPU: `psrinfo | wc -l`" \
               >> $MACHINE_OSINFO_DIR/osinfo.log
         echo "MEM: `prtconf | grep -i 'Memory size'`" \
@@ -126,11 +195,12 @@ SunOS)
                         while read i; do   echo "LAN: $i" ; done \
                                 >> $MACHINE_OSINFO_DIR/osinfo.log
                 cat $MACHINE_OSINFO_DIR/osinfo.log
-
 ;;
+
 *)
 	echo "We do not support OSINFO for $OSNAME yet.."
 	exit $TRUE
 ;;
+
 esac
 
