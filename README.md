@@ -14,6 +14,7 @@ Supported Platforms:
 1. Solaris 8,9,10,11, including LDOMs and all kinds of Zones on all hardware types
 2. Redhat Linux on all Hardware types
 3. HP-UX 11.23, 11.31 on both Itanium and PA-RISC platforms
+4. AIX 5.3 (should work on 6.x and 7.x but not tested on them yet)
 
 How to use osinfo.sh:
 

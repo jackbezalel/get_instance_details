@@ -183,6 +183,52 @@ HP-UX)
 
         cat $MACHINE_OSINFO_DIR/osinfo.log
 ;;
+AIX)
+	OS_MAJOR_VERS="`GET_OS_MAJOR_VERS $OSNAME`"
+
+	if 	[ $OS_MAJOR_VERS = "error" ];
+	then
+        	echo "We do not support OSINFO for $OSNAME yet.."
+        	exit $TRUE
+	fi
+
+	echo "Vendor=$OSNAME"	
+	echo "Major Version=$OS_MAJOR_VERS"
+	
+	OSARCH="`uname -p`"
+
+    MACHINE_OSINFO_DIR="$OSINFO_ROOT/$HOSTNAME/$OSINFO_DATE"
+    echo "Machine $HOSTNAME OSINFO will be reported at $MACHINE_OSINFO_DIR"
+    mkdir -p $MACHINE_OSINFO_DIR
+
+	HARDWARE_TYPE="`uname -M`" 
+	# uname -L shows partition number and on LPARs its always > 1
+	if 		[ "`uname -L | awk '{ print $1 }'" != "1" ];
+	then
+			HARDWARE_TYPE="VIRTUAL $HARDWARE_TYPE"
+	fi
+	echo "OSINFO dump `date`" > $MACHINE_OSINFO_DIR/osinfo.log
+	echo "HARDWARE: $HARDWARE_TYPE $OSARCH" >> $MACHINE_OSINFO_DIR/osinfo.log
+	echo "CPU: `lsdev | grep -i processor | wc -l `" \
+              >> $MACHINE_OSINFO_DIR/osinfo.log
+        echo "MEM: `bootinfo -r` Kb" \
+              >> $MACHINE_OSINFO_DIR/osinfo.log
+        echo "`lsdev -Cc disk`" | \
+        while read i; do   
+			DISKI_NAME="`echo $i | awk '{print ( $1 )}'`"
+			echo "DISK: $i SIZE: `lsattr -El hdisk0 -a size_in_mb -F value` MB"
+		done \
+               	>> $MACHINE_OSINFO_DIR/osinfo.log
+        lsdev | grep -i 'ent[0-9]*' | \
+        while read i; do
+              echo "NET: $i" ;
+        done \
+              >> $MACHINE_OSINFO_DIR/osinfo.log
+
+		>> $MACHINE_OSINFO_DIR/osinfo.log
+
+        cat $MACHINE_OSINFO_DIR/osinfo.log
+;;
 
 *)
 	echo "We do not support OSINFO for $OSNAME yet.."

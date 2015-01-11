@@ -22,6 +22,11 @@ HP-UX)
         echo $OS_MAJOR_VERS
         return $TRUE
 ;;
+AIX)
+        OS_MAJOR_VERS="`uname -v`.`uname -r`"
+        echo $OS_MAJOR_VERS
+        return $TRUE
+;;
 *)
 	echo "error"
         exit $TRUE
