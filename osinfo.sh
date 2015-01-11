@@ -162,18 +162,18 @@ HP-UX)
 	HARDWARE_TYPE="`model`" 
 	echo "OSINFO dump `date`" > $MACHINE_OSINFO_DIR/osinfo.log
 	echo "HARDWARE: $HARDWARE_TYPE" >> $MACHINE_OSINFO_DIR/osinfo.log
-	echo "CPU: `ioscan -C processor -l -F | wc -l`" \
+	echo "CPU: `/sbin/ioscan -C processor -l -F | wc -l`" \
               >> $MACHINE_OSINFO_DIR/osinfo.log
         echo "MEM: `print_manifest |grep -i memory`" \
               >> $MACHINE_OSINFO_DIR/osinfo.log
-        echo "`ioscan -fC disk`" | while read i; do   
+        echo "`/sbin/ioscan -fC disk`" | while read i; do   
 		if 	[ "`echo $i | cut -c0-4`" = "disk" ];
 		then
 			echo "DISK: $i"
 		fi
 	done \
                	>> $MACHINE_OSINFO_DIR/osinfo.log
-        lanscan | grep "lan" | grep -v "DOWN" | \
+        /usr/sbin/lanscan | grep "lan" | grep -v "DOWN" | \
         while read i; do
               echo "NET: $i" ;
         done \
