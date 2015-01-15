@@ -48,7 +48,7 @@ Linux)
 	
 	echo "Major Version=$OS_MAJOR_VERS"
 	OSARCH="`uname -i`"
-	MACHINE_OSINFO_DIR="$OSINFO_ROOT/$HOSTNAME/$OSINFO_DATE"
+	MACHINE_OSINFO_DIR="$OSINFO_ROOT/$HOSTNAME"
 	echo "Machine $HOSTNAME OSINFO will be reported at $MACHINE_OSINFO_DIR"
 
 	if [ $LINUX_VENDOR = "redhat" ];
@@ -108,7 +108,7 @@ SunOS)
 
 	OSARCH="`uname -m`"
 
-        MACHINE_OSINFO_DIR="$OSINFO_ROOT/$HOSTNAME/$OSINFO_DATE"
+        MACHINE_OSINFO_DIR="$OSINFO_ROOT/$HOSTNAME"
         echo "Machine $HOSTNAME OSINFO will be reported at $MACHINE_OSINFO_DIR"
 
         mkdir -p $MACHINE_OSINFO_DIR
@@ -155,7 +155,7 @@ HP-UX)
 	
 	OSARCH="`uname -m`"
 
-        MACHINE_OSINFO_DIR="$OSINFO_ROOT/$HOSTNAME/$OSINFO_DATE"
+        MACHINE_OSINFO_DIR="$OSINFO_ROOT/$HOSTNAME"
         echo "Machine $HOSTNAME OSINFO will be reported at $MACHINE_OSINFO_DIR"
 
         mkdir -p $MACHINE_OSINFO_DIR
@@ -197,13 +197,13 @@ AIX)
 	
 	OSARCH="`uname -p`"
 
-    MACHINE_OSINFO_DIR="$OSINFO_ROOT/$HOSTNAME/$OSINFO_DATE"
+    MACHINE_OSINFO_DIR="$OSINFO_ROOT/$HOSTNAME"
     echo "Machine $HOSTNAME OSINFO will be reported at $MACHINE_OSINFO_DIR"
     mkdir -p $MACHINE_OSINFO_DIR
 
 	HARDWARE_TYPE="`uname -M`" 
 	# uname -L shows partition number and on LPARs its always > 1
-	if 		[ "`uname -L | awk '{ print $1 }'" != "1" ];
+	if 		[ "`uname -L | awk '{ print $1 }'`" != "1" ];
 	then
 			HARDWARE_TYPE="VIRTUAL $HARDWARE_TYPE"
 	fi
@@ -216,10 +216,10 @@ AIX)
         echo "`lsdev -Cc disk`" | \
         while read i; do   
 			DISKI_NAME="`echo $i | awk '{print ( $1 )}'`"
-			echo "DISK: $i SIZE: `lsattr -El hdisk0 -a size_in_mb -F value` MB"
+			echo "DISK: $i SIZE: `getconf DISK_SIZE /dev/$DISKI_NAME` MB"
 		done \
                	>> $MACHINE_OSINFO_DIR/osinfo.log
-        lsdev | grep -i 'ent[0-9]*' | \
+        lsdev | grep -i '^ent[0-9]*' | \
         while read i; do
               echo "NET: $i" ;
         done \
